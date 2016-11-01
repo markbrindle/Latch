@@ -200,20 +200,20 @@ public struct Latch {
     @discardableResult public func set(object: Data, forKey key: String) -> Bool {
         var query = baseQuery(forKey: key)
 
-        var update = [NSString : AnyObject]()
+        var update = [NSString : Any]()
         update[kSecValueData] = object
         update[kSecAttrAccessible] = state.accessibility.rawValue
 
         var status = errSecSuccess
         if data(forKey: key) != nil { // Data already exists, we're updating not writing.
-            status = SecItemUpdate(query, update)
+            status = SecItemUpdate(query as CFDictionary, update as CFDictionary)
         }
         else { // No existing data, write a new item.
             for (key, value) in update {
                 query[key] = value
             }
 
-            status = SecItemAdd(query, nil)
+            status = SecItemAdd(query as CFDictionary, nil)
         }
 
         if status != errSecSuccess {
@@ -231,7 +231,7 @@ public struct Latch {
         let query = baseQuery(forKey: key)
 
         if data(forKey: key) != nil {
-            let status = SecItemDelete(query)
+            let status = SecItemDelete(query as CFDictionary)
             if status != errSecSuccess {
                 print("Latch failed to remove data for key '\(key)', error: \(status)")
                 return false
@@ -249,7 +249,7 @@ public struct Latch {
     iOS and watchOS.
     */
     @discardableResult public func resetKeychain() -> Bool {
-        let query = [kSecClass : kSecClassGenericPassword]
+        let query = [kSecClass as String : kSecClassGenericPassword] as CFDictionary
         let status = SecItemDelete(query)
         if status != errSecSuccess {
             print("Latch failed to reset keychain, error: \(status)")
@@ -262,8 +262,8 @@ public struct Latch {
 
     // MARK - Private
 
-    private func baseQuery(forKey key: String) -> [NSString : AnyObject] {
-        var query = [NSString : AnyObject]()
+    private func baseQuery(forKey key: String) -> [NSString : Any] {
+        var query = [NSString : Any]()
         if !state.service.isEmpty {
             query[kSecAttrService] = state.service
         }

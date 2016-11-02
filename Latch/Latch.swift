@@ -279,7 +279,7 @@ public struct Latch {
         query[kSecAttrGeneric] = key
 
 //        #if TARGET_OS_IOS && !TARGET_OS_SIMULATOR
-        #if !IOS_SIMULATOR
+        #if os(iOS) && !IOS_SIMULATOR
         // Ignore the access group if running on the iPhone simulator.
         //
         // Apps that are built for the simulator aren't signed, so there's no keychain access group

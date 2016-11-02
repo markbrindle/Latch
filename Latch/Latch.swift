@@ -214,6 +214,13 @@ public struct Latch {
             }
 
             status = SecItemAdd(query as CFDictionary, nil)
+            if status == errSecDuplicateItem {
+                // A value with this key exists - but we couldn't access it so try deleting & re-creating it
+                if resetKeychain() {
+                    // Try once again, if successful
+                    status = SecItemAdd(query as CFDictionary, nil)
+                }
+            }
         }
 
         if status != errSecSuccess {
@@ -271,7 +278,8 @@ public struct Latch {
         query[kSecAttrAccount] = key
         query[kSecAttrGeneric] = key
 
-        #if TARGET_OS_IOS && !TARGET_OS_SIMULATOR
+//        #if TARGET_OS_IOS && !TARGET_OS_SIMULATOR
+        #if !IOS_SIMULATOR
         // Ignore the access group if running on the iPhone simulator.
         //
         // Apps that are built for the simulator aren't signed, so there's no keychain access group
@@ -281,8 +289,8 @@ public struct Latch {
         // If a SecItem contains an access group attribute, SecItemAdd and SecItemUpdate on the
         // simulator will return -25243 (errSecNoAccessForItem).
 
-        if !state.accessGroup?.isEmpty {
-            query[kSecAttrAccessGroup] = state.accessGroup
+        if let accessGroup = state.accessGroup, !accessGroup.isEmpty {
+            query[kSecAttrAccessGroup] = accessGroup
         }
         #endif
 
